@@ -1,10 +1,11 @@
+#include "../src/threadpool.h"
+#include "../src/graph.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "ThreadPool/threadpool.h"
 #include <limits.h>
 #include <math.h> // Include for log2 and ceil
-#include "SyncGraph/graph.h"
 #include <unistd.h>
 
 
