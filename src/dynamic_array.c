@@ -1,12 +1,5 @@
 #include "dynamic_array.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-
-#define PANIC(msg) do { \
-  fprintf(stderr, "Runtime error in \"%s:%d\". %s\n", __FILE__, __LINE__, msg); \
-  exit(EXIT_FAILURE); \
-} while (0)
+#include "common.h"
 
 void initDynamicArray(DynamicArray *array, size_t initial_capacity) {
   if (!initial_capacity) {

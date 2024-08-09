@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-typedef struct dynamic_array_t {
+typedef struct {
   size_t size, capacity;
   size_t *data;
 } DynamicArray;
@@ -14,4 +14,4 @@ void pushTo(DynamicArray *array, size_t element);
 
 void destroyDynamicArray(DynamicArray *array);
 
-#endif
+#endif // DYNAMIC_ARRAY_H

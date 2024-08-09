@@ -1,10 +1,10 @@
-#ifndef _PAGE_RANK_
-#define _PAGE_RANK_
+#ifndef PAGE_RANK_H
+#define PAGE_RANK_H
 
 #include "graph.h"
 
 #include <unistd.h>
 
-void PageRank(Graph *g, int iterations, float *rank);
+void PageRank(Graph *g, int iterations, float *output_ranks);
 
-#endif
+#endif // PAGE_RANK_H

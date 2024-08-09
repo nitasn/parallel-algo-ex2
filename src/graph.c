@@ -1,12 +1,5 @@
 #include "graph.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#define PANIC(msg) do { \
-  fprintf(stderr, "Runtime error in \"%s:%d\". %s\n", __FILE__, __LINE__, msg); \
-  exit(EXIT_FAILURE); \
-} while (0)
+#include "common.h"
 
 Graph *createGraph(size_t num_vertices) {
   Graph *graph = (Graph *)malloc(sizeof(Graph));
