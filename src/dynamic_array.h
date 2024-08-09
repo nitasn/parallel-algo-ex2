@@ -8,10 +8,10 @@ typedef struct dynamic_array_t {
   size_t *data;
 } DynamicArray;
 
-DynamicArray *createDynamicArray(size_t initial_capacity);
+void initDynamicArray(DynamicArray *array, size_t initial_capacity);
 
 void pushTo(DynamicArray *array, size_t element);
 
-void freeDynamicArray(DynamicArray *array);
+void destroyDynamicArray(DynamicArray *array);
 
 #endif
