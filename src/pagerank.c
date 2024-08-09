@@ -18,20 +18,18 @@ static void _destroy_pool(void) {
 typedef struct {
   float *addr, value;
   size_t array_size;
-} _memset_worker_args;
+} worker_args;
 
-static void _memset_worker(void *args) {
-  _memset_worker_args *params = (_memset_worker_args *)args;
+static void worker(void *args) {
+  worker_args *params = (worker_args *)args;
 
-  for (size_t i = 0; i < params->array_size; ++i) {
-    params->addr[i] = params->value;
-  }
+  
 }
 
 static void fill_array_with(float *arr, size_t N, float value) {
   size_t split = N / NUM_WORKERS;
 
-  _memset_worker_args *args = (_memset_worker_args *) malloc(NUM_WORKERS * sizeof(_memset_worker_args));
+  worker_args *args = (worker_args *) malloc(NUM_WORKERS * sizeof(worker_args));
   if (!args) PANIC("malloc failed\n");
 
   for (int i = 0; i < NUM_WORKERS; ++i) {
@@ -43,7 +41,7 @@ static void fill_array_with(float *arr, size_t N, float value) {
       args[i].array_size = N - i * split;
     }
 
-    thpool_add_work(pool, _memset_worker, (void *) &args[i]);
+    thpool_add_work(pool, worker, (void *) &args[i]);
   }
 
   thpool_wait(pool);
@@ -76,6 +74,9 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
   DynamicArray dead_ends;
   initDynamicArray(&dead_ends, N / 4);
 
+  // I'm not parallelizing this loop becuase it's only done once, as opposed
+  // to the next loop, that runs for many iterations.
+  // This loop is fast for billions for nodes, which is the size of our data.
   for (size_t i = 0; i < N; ++i) {
     if (graph->forward_links[i].size == 0) {
       pushTo(&dead_ends, i);
@@ -87,27 +88,26 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
 
   for (int iter = 0; iter < iterations; iter++) {
 
-    double sumB = 0;
+    double bias = 0;
     for (size_t k = 0; k < dead_ends.size; ++k) {
       size_t v = dead_ends.data[k];
-      sumB += ranks[v];
+      bias += ranks[v];
     }
-    sumB = (1 - D) * (sumB / N);
+    bias = (1 - D) * (bias / N);
 
     for (size_t i = 0; i < N; i++) {
-      
-      double sumA = 0.0;
+      double score_i = 0.0;
 
       for (size_t k = 0; k < graph->backwoard_links[i].size; ++k) {
         size_t j = graph->backwoard_links[i].data[k];
-        sumA += ranks[j] / graph->forward_links[j].size;
+        score_i += ranks[j] / graph->forward_links[j].size;
       }
 
-      next_ranks[i] = (D / N) + (1 - D) * sumA + sumB;
+      next_ranks[i] = (D / N) + (1 - D) * score_i;
     }
 
     for (size_t i = 0; i < N; i++) {
-      ranks[i] = next_ranks[i];
+      ranks[i] = next_ranks[i] + bias;
     }
   }
 
