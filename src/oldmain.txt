@@ -1,0 +1,38 @@
+#include "threadpool.h"
+
+#include <stdio.h>
+#include <unistd.h>
+
+void nap(int ms) {
+  int us = ms * 1000; // convert milliseconds to microseconds
+  usleep(us); 
+}
+
+void worker(void *args) {
+  size_t index = (size_t) args;
+  usleep(index * 100);
+
+  printf("%lu\n", index);
+  usleep(index * 1000);
+}
+
+
+int main() {
+  threadpool pool = thpool_init(5);
+
+  for (size_t i = 0; i < 5; i++) {
+    thpool_add_work(pool, worker, (void *)i);
+  }
+
+  thpool_wait(pool);
+
+  printf("\n cool \n \n");
+
+  for (size_t i = 0; i < 5; i++) {
+    thpool_add_work(pool, worker, (void *)i);
+  }
+
+  thpool_wait(pool);
+
+  thpool_destroy(pool);
+}
