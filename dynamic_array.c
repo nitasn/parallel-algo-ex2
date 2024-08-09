@@ -1,6 +1,8 @@
 #include "dynamic_array.h"
 #include "common.h"
 
+#include <stdint.h> // for SIZE_MAX
+
 void initDynamicArray(DynamicArray *array, size_t initial_capacity) {
   if (!array) {
     PANIC("Array pointer is NULL.");
