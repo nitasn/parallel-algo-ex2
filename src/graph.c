@@ -16,15 +16,15 @@ Graph *createGraph(size_t num_vertices) {
   }
 
   graph->num_vertices = num_vertices;
-  graph->neighbors_arrs = malloc(num_vertices * sizeof(DynamicArray));
+  graph->neighbors_of = malloc(num_vertices * sizeof(DynamicArray));
 
-  if (graph->neighbors_arrs == NULL) {
+  if (graph->neighbors_of == NULL) {
     free(graph);
     PANIC("Could not allocate memory.");
   }
 
   for (size_t i = 0; i < num_vertices; ++i) {
-    initDynamicArray(&graph->neighbors_arrs[i], 0);
+    initDynamicArray(&graph->neighbors_of[i], 0);
   }
 
   return graph;
@@ -39,13 +39,13 @@ void addEdge(Graph *graph, size_t src, size_t dst) {
     PANIC("Invalid src or dst indices.");
   }
 
-  pushTo(&graph->neighbors_arrs[src], dst);
+  pushTo(&graph->neighbors_of[src], dst);
 }
 
 void freeGraph(Graph *graph) {
   if (graph != NULL) {
     for (size_t i = 0; i < graph->num_vertices; ++i) {
-      destroyDynamicArray(&graph->neighbors_arrs[i]);
+      destroyDynamicArray(&graph->neighbors_of[i]);
     }
 
     free(graph);

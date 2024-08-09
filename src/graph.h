@@ -7,7 +7,7 @@
 
 typedef struct graph_t {
   size_t num_vertices;
-  DynamicArray *neighbors_arrs;
+  DynamicArray *neighbors_of;
 } Graph;
 
 
