@@ -2,12 +2,12 @@
 #include "common.h"
 
 void initDynamicArray(DynamicArray *array, size_t initial_capacity) {
-  if (!initial_capacity) {
-    initial_capacity = 8;
-  }
-
   if (!array) {
     PANIC("Array pointer is NULL.");
+  }
+
+  if (!initial_capacity) {
+    initial_capacity = 8;
   }
 
   array->size = 0;
