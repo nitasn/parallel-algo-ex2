@@ -100,12 +100,12 @@ void PageRank(Graph *graph, int iterations, float *output_ranks) {
 
   for (int iter = 0; iter < iterations; iter++) {
 
-    double sumLonerRanks = 0;
+    double sum_loner_ranks = 0;
     for (size_t i = 0; i < loners.size; ++i) {
       size_t v = loners.data[i];
-      sumLonerRanks += output_ranks[v];
+      sum_loner_ranks += output_ranks[v];
     }
-    sumLonerRanks /= N;
+    sum_loner_ranks /= N;
 
     for (size_t i = 0; i < N; i++) {
       
@@ -117,7 +117,7 @@ void PageRank(Graph *graph, int iterations, float *output_ranks) {
         } 
       }
 
-      next_ranks[i] = D / N + (1 - D) * (sumA + sumLonerRanks);
+      next_ranks[i] = D / N + (1 - D) * (sumA + sum_loner_ranks);
     }
 
     for (size_t i = 0; i < N; i++) {

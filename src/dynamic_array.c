@@ -6,7 +6,7 @@ void initDynamicArray(DynamicArray *array, size_t initial_capacity) {
     initial_capacity = 8;
   }
 
-  if (array == NULL) {
+  if (!array) {
     PANIC("Array pointer is NULL.");
   }
 
@@ -15,14 +15,14 @@ void initDynamicArray(DynamicArray *array, size_t initial_capacity) {
 
   array->data = malloc(initial_capacity * sizeof(size_t));
 
-  if (array->data == NULL) {
+  if (!array->data) {
     free(array);
     PANIC("Could not allocate memory.");
   }
 }
 
 void pushTo(DynamicArray *array, size_t element) {
-  if (array == NULL) {
+  if (!array) {
     PANIC("Array pointer is NULL.");
   }
 
@@ -36,7 +36,7 @@ void pushTo(DynamicArray *array, size_t element) {
 
     size_t *new_data = realloc(array->data, new_capacity * sizeof(size_t));
 
-    if (new_data == NULL) {
+    if (!new_data) {
       PANIC("Could not allocate memory.");
     }
 
@@ -50,7 +50,7 @@ void pushTo(DynamicArray *array, size_t element) {
 
 
 void destroyDynamicArray(DynamicArray *array) {
-  if (array == NULL) {
+  if (!array) {
     PANIC("Array pointer is NULL.");
   }
 
