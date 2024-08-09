@@ -7,7 +7,7 @@
 
 typedef struct {
   size_t num_vertices;
-  DynamicArray *neighbors_of;
+  DynamicArray *forward_links, *backwoard_links;
 } Graph;
 
 Graph *createGraph(size_t num_vertices);

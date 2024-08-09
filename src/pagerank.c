@@ -53,7 +53,7 @@ static void fill_array_with(float *arr, size_t N, float value) {
   free(args);
 }
 
-void PageRank(Graph *graph, int iterations, float *output_ranks) {
+void PageRank(Graph *graph, int iterations, float *ranks) {
   size_t N = graph->num_vertices;
 
   if (!pool) {
@@ -69,28 +69,17 @@ void PageRank(Graph *graph, int iterations, float *output_ranks) {
   // For larger N values, the problem steepens. I investigated it online. 
   // It seems that usually MEMSET ISN'T WORTH PARALLELIZING. The issue seems to be the memory bus.
   for (size_t i = 0; i < N; i++) {
-    output_ranks[i] = 1.0 / N;
+    ranks[i] = 1.0 / N;
   }
 
   float *next_ranks = (float *) malloc(N * sizeof(float));
-  bool *adjacency_matrix = (bool *) calloc(N * N, sizeof(bool));
-
-  if (!next_ranks || !adjacency_matrix) PANIC("memory allocation failed");
-
-  #define edge_exists(i, j) adjacency_matrix[(i) * N + (j)]
-
-  for (size_t i = 0; i < N; i++) {
-    for (size_t edge = 0; edge < graph->neighbors_of[i].size; ++edge) {
-      size_t j = graph->neighbors_of[i].data[edge];
-      edge_exists(i, j) = true;
-    }
-  }
+  if (!next_ranks) PANIC("memory allocation failed");
 
   DynamicArray loners;
   initDynamicArray(&loners, N / 4);
 
   for (size_t i = 0; i < N; ++i) {
-    if (graph->neighbors_of[i].size == 0) {
+    if (graph->forward_links[i].size == 0) {
       pushTo(&loners, i);
     }
   }
@@ -101,9 +90,9 @@ void PageRank(Graph *graph, int iterations, float *output_ranks) {
   for (int iter = 0; iter < iterations; iter++) {
 
     double sum_loner_ranks = 0;
-    for (size_t i = 0; i < loners.size; ++i) {
-      size_t v = loners.data[i];
-      sum_loner_ranks += output_ranks[v];
+    for (size_t k = 0; k < loners.size; ++k) {
+      size_t v = loners.data[k];
+      sum_loner_ranks += ranks[v];
     }
     sum_loner_ranks /= N;
 
@@ -111,17 +100,16 @@ void PageRank(Graph *graph, int iterations, float *output_ranks) {
       
       double sumA = 0.0;
 
-      for (size_t j = 0 ; j < N; j++) {
-        if (edge_exists(j, i)) {
-          sumA += output_ranks[j] / graph->neighbors_of[j].size;
-        } 
+      for (size_t k = 0; k < graph->backwoard_links[i].size; ++k) {
+        size_t j = graph->backwoard_links[i].data[k];
+        sumA += ranks[j] / graph->forward_links[j].size;
       }
 
-      next_ranks[i] = D / N + (1 - D) * (sumA + sum_loner_ranks);
+      next_ranks[i] = (D / N) + (1 - D) * (sumA + sum_loner_ranks);
     }
 
     for (size_t i = 0; i < N; i++) {
-      output_ranks[i] = next_ranks[i];
+      ranks[i] = next_ranks[i];
     }
   }
 
