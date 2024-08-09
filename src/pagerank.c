@@ -9,7 +9,7 @@
 
 
 static threadpool pool = NULL;
-static const int NUM_WORKERS = 2;
+static const int NUM_WORKERS = 4;
 
 static void _destroy_pool(void) {
   thpool_destroy(pool);
@@ -42,7 +42,7 @@ static void worker(void *args) {
 }
 
 
-// reusing memory: avoiding malloc on every iteration.
+// reusing memory: avoiding invoking malloc on every iteration.
 static worker_args *_args_arr = NULL;
 
 static void _free_args_arr(void) {
@@ -69,6 +69,8 @@ static void parallel_page_rank_round(Graph *graph, float *ranks, float *next_ran
     args[i].from_idx = i * split;
     args[i].upto_idx = (i + 1) * split;
 
+    // if N isn't divisible by NUM_WORKERS,
+    // attach reminder work to last thread.
     if (i + 1 == NUM_WORKERS) {
       args[i].upto_idx = N;
     }
@@ -138,5 +140,6 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
     }
   }
 
-  // todo free & destroy stuff
+  free(next_ranks);
+  destroyDynamicArray(&dead_ends);
 }
