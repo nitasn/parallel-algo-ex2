@@ -9,44 +9,76 @@
 
 
 static threadpool pool = NULL;
-static const int NUM_WORKERS = 4;
+static const int NUM_WORKERS = 2;
 
 static void _destroy_pool(void) {
-  if (pool) thpool_destroy(pool);
+  thpool_destroy(pool);
 }
 
 typedef struct {
-  float *addr, value;
-  size_t array_size;
+  Graph *graph;
+  float *ranks, *next_ranks;
+  size_t from_idx, upto_idx;
+  double bias;
 } worker_args;
 
 static void worker(void *args) {
   worker_args *params = (worker_args *)args;
 
-  
+  Graph *graph = params->graph;
+  size_t N = graph->num_vertices;
+
+  for (size_t i = params->from_idx; i < params->upto_idx; ++i) {
+    double score_i = 0.0;
+
+    for (size_t k = 0; k < graph->backwoard_links[i].size; ++k) {
+      size_t j = graph->backwoard_links[i].data[k];
+      // for every edge (j, i) in the graph:
+      score_i += params->ranks[j] / graph->forward_links[j].size;
+    }
+
+    params->next_ranks[i] = (D / N) + (1 - D) * score_i + params->bias;
+  }
 }
 
-static void fill_array_with(float *arr, size_t N, float value) {
+
+// reusing memory: avoiding malloc on every iteration.
+static worker_args *_args_arr = NULL;
+
+static void _free_args_arr(void) {
+  free(_args_arr);
+}
+
+static void parallel_page_rank_round(Graph *graph, float *ranks, float *next_ranks, double bias) {
+  size_t N = graph->num_vertices;
   size_t split = N / NUM_WORKERS;
 
-  worker_args *args = (worker_args *) malloc(NUM_WORKERS * sizeof(worker_args));
-  if (!args) PANIC("malloc failed\n");
+  if (!_args_arr) {
+    _args_arr = (worker_args *) malloc(NUM_WORKERS * sizeof(worker_args));
+    if (_args_arr) atexit(_free_args_arr);
+    else PANIC("Could not allocate memory\n");
+  }
+
+  worker_args *args = _args_arr;
 
   for (int i = 0; i < NUM_WORKERS; ++i) {
-    args[i].addr = arr + i * split;
-    args[i].array_size = split;
-    args[i].value = value;
+    args[i].graph = graph;
+    args[i].ranks = ranks;
+    args[i].next_ranks = next_ranks;
+
+    args[i].from_idx = i * split;
+    args[i].upto_idx = (i + 1) * split;
 
     if (i + 1 == NUM_WORKERS) {
-      args[i].array_size = N - i * split;
+      args[i].upto_idx = N;
     }
+
+    args[i].bias = bias;
 
     thpool_add_work(pool, worker, (void *) &args[i]);
   }
 
   thpool_wait(pool);
-
-  free(args);
 }
 
 void PageRank(Graph *graph, int iterations, float *ranks) {
@@ -83,31 +115,26 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
     }
   }
 
-  if (iterations > 10000) fill_array_with(NULL, 0, 0);
-  
 
-  for (int iter = 0; iter < iterations; iter++) {
+  for (int iter = 0; iter < iterations; ++iter) {
 
     double bias = 0;
+
+    // whether to parallelize this loop is a question of how many dead_ends there are.
+    // assuming their number is relatively small, the work is better be done here without overhead.
     for (size_t k = 0; k < dead_ends.size; ++k) {
       size_t v = dead_ends.data[k];
       bias += ranks[v];
     }
+
     bias = (1 - D) * (bias / N);
 
+    parallel_page_rank_round(graph, ranks, next_ranks, bias);
+
+    // see my comment above for why not to parallelize memcpy.
+    // tl;dr - it's not faster for larger N values. something memory bus contention something.
     for (size_t i = 0; i < N; i++) {
-      double score_i = 0.0;
-
-      for (size_t k = 0; k < graph->backwoard_links[i].size; ++k) {
-        size_t j = graph->backwoard_links[i].data[k];
-        score_i += ranks[j] / graph->forward_links[j].size;
-      }
-
-      next_ranks[i] = (D / N) + (1 - D) * score_i;
-    }
-
-    for (size_t i = 0; i < N; i++) {
-      ranks[i] = next_ranks[i] + bias;
+      ranks[i] = next_ranks[i];
     }
   }
 
