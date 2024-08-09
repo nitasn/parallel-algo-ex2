@@ -16,7 +16,7 @@
 // }
 
 int main(void) {
-  size_t NUM_NODES = 3;
+  size_t NUM_NODES = 4;
   size_t iterations = 100;
 
   Graph *graph = createGraph(NUM_NODES);
@@ -26,6 +26,9 @@ int main(void) {
   addEdge(graph, 1, 0);
   addEdge(graph, 1, 2);
   addEdge(graph, 2, 0);
+  addEdge(graph, 2, 3);
+  addEdge(graph, 1, 3);
+  addEdge(graph, 0, 3);
 
 
   float *ranks = (float *) malloc(NUM_NODES * sizeof(float));

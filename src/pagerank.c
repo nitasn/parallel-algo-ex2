@@ -11,10 +11,8 @@
 static threadpool pool = NULL;
 static const int NUM_WORKERS = 4;
 
-static void destroy_pool(void) {
-  if (pool) {
-    thpool_destroy(pool);
-  }
+static void _destroy_pool(void) {
+  if (pool) thpool_destroy(pool);
 }
 
 typedef struct {
@@ -58,7 +56,7 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
 
   if (!pool) {
     pool = thpool_init(4);
-    if (pool) atexit(destroy_pool);
+    if (pool) atexit(_destroy_pool);
     else PANIC("Could not create thread pool");
   }
 
@@ -75,12 +73,12 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
   float *next_ranks = (float *) malloc(N * sizeof(float));
   if (!next_ranks) PANIC("memory allocation failed");
 
-  DynamicArray loners;
-  initDynamicArray(&loners, N / 4);
+  DynamicArray dead_ends;
+  initDynamicArray(&dead_ends, N / 4);
 
   for (size_t i = 0; i < N; ++i) {
     if (graph->forward_links[i].size == 0) {
-      pushTo(&loners, i);
+      pushTo(&dead_ends, i);
     }
   }
 
@@ -89,12 +87,12 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
 
   for (int iter = 0; iter < iterations; iter++) {
 
-    double sum_loner_ranks = 0;
-    for (size_t k = 0; k < loners.size; ++k) {
-      size_t v = loners.data[k];
-      sum_loner_ranks += ranks[v];
+    double sumB = 0;
+    for (size_t k = 0; k < dead_ends.size; ++k) {
+      size_t v = dead_ends.data[k];
+      sumB += ranks[v];
     }
-    sum_loner_ranks /= N;
+    sumB = (1 - D) * (sumB / N);
 
     for (size_t i = 0; i < N; i++) {
       
@@ -105,7 +103,7 @@ void PageRank(Graph *graph, int iterations, float *ranks) {
         sumA += ranks[j] / graph->forward_links[j].size;
       }
 
-      next_ranks[i] = (D / N) + (1 - D) * (sumA + sum_loner_ranks);
+      next_ranks[i] = (D / N) + (1 - D) * sumA + sumB;
     }
 
     for (size_t i = 0; i < N; i++) {
