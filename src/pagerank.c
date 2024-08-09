@@ -86,30 +86,44 @@ void PageRank(Graph *graph, int iterations, float *output_ranks) {
     }
   }
 
+  DynamicArray loners;
+  initDynamicArray(&loners, N / 4);
+
+  for (size_t i = 0; i < N; ++i) {
+    if (graph->neighbors_of[i].size == 0) {
+      pushTo(&loners, i);
+    }
+  }
+
   if (iterations > 10000) fill_array_with(NULL, 0, 0);
   
 
   for (int iter = 0; iter < iterations; iter++) {
 
+    double sumLonerRanks = 0;
+    for (size_t i = 0; i < loners.size; ++i) {
+      size_t v = loners.data[i];
+      sumLonerRanks += output_ranks[v];
+    }
+    sumLonerRanks /= N;
+
     for (size_t i = 0; i < N; i++) {
       
       double sumA = 0.0;
-      double sumB = 0.0;
 
       for (size_t j = 0 ; j < N; j++) {
         if (edge_exists(j, i)) {
           sumA += output_ranks[j] / graph->neighbors_of[j].size;
         } 
-        else if (graph->neighbors_of[j].size == 0) {
-          sumB += output_ranks[j] / N;
-        }
       }
 
-      next_ranks[i] = D / N + (1 - D) * (sumA + sumB);
+      next_ranks[i] = D / N + (1 - D) * (sumA + sumLonerRanks);
     }
 
     for (size_t i = 0; i < N; i++) {
       output_ranks[i] = next_ranks[i];
     }
   }
+
+  // todo free & destroy stuff
 }
