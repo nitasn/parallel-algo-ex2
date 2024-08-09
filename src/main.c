@@ -91,7 +91,8 @@
 #include <stdlib.h>
 
 int main() {
-  size_t N = 2 * 1024 * 1024 + 101;
+  size_t N = 1024 * 1024 * 1024;
+  // size_t N = 13;
   Graph *g = createGraph(N);
 
   float *ranks = (float *) malloc(N * sizeof(float));
