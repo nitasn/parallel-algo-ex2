@@ -1,3 +1,13 @@
+# Theoretical Questions
+
+Nitsan BenHanoch 208585927
+
+**I WAS ALLOWED TO SUBMIT THIS WORK LATE**
+
+Lior approved this because she is very nice `<3`
+
+---
+
 ## Part `I - A`
 
 > Determine whether the parentheses in a given mathematical equation are balanced.
