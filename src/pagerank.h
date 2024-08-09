@@ -3,8 +3,6 @@
 
 #include "graph.h"
 
-#include <unistd.h>
-
 void PageRank(Graph *g, int iterations, float *ranks);
 
 #endif // PAGE_RANK_H
