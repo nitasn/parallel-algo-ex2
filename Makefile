@@ -1,4 +1,4 @@
-SRC_DIR := src
+SRC_DIR := part-3
 OUT_DIR := build
 
 OBJ_DIR := $(OUT_DIR)/.o
