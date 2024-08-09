@@ -5,6 +5,9 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#define D 0.15 // damping factor
+
+
 static threadpool pool = NULL;
 static const int NUM_WORKERS = 4;
 
@@ -64,22 +67,49 @@ void PageRank(Graph *graph, int iterations, float *output_ranks) {
   // This seemed like a vicotry! However,
   // For N = 1024 * 1024 * 1024, memset takes 0.41 seconds, and parallel_memset takes 0.95 seconds.
   // For larger N values, the problem steepens. I investigated it online. 
-  // It seems that usually MEMSET ISN'T WORTH PARALLELIZING. THE ISSUE SEEMS TO BE THE MEMORY BUS.
-  // And, we're talking sub-seconds for GBs of data, which is the the upper limit of RAM size anyway.
+  // It seems that usually MEMSET ISN'T WORTH PARALLELIZING. The issue seems to be the memory bus.
   for (size_t i = 0; i < N; i++) {
     output_ranks[i] = 1.0 / N;
   }
 
   float *next_ranks = (float *) malloc(N * sizeof(float));
+  bool *adjacency_matrix = (bool *) calloc(N * N, sizeof(bool));
 
-  if (!next_ranks) PANIC("malloc failed");
+  if (!next_ranks || !adjacency_matrix) PANIC("memory allocation failed");
 
-  bool *has_link = (bool *) calloc(N * N, sizeof(bool));
-  
+  #define edge_exists(i, j) adjacency_matrix[(i) * N + (j)]
+
   for (size_t i = 0; i < N; i++) {
     for (size_t edge = 0; edge < graph->neighbors_of[i].size; ++edge) {
       size_t j = graph->neighbors_of[i].data[edge];
-      has_link[i * N + j] = 1;
+      edge_exists(i, j) = true;
+    }
+  }
+
+  if (iterations > 10000) fill_array_with(NULL, 0, 0);
+  
+
+  for (int iter = 0; iter < iterations; iter++) {
+
+    for (size_t i = 0; i < N; i++) {
+      
+      double sumA = 0.0;
+      double sumB = 0.0;
+
+      for (size_t j = 0 ; j < N; j++) {
+        if (edge_exists(j, i)) {
+          sumA += output_ranks[j] / graph->neighbors_of[j].size;
+        } 
+        else if (graph->neighbors_of[j].size == 0) {
+          sumB += output_ranks[j] / N;
+        }
+      }
+
+      next_ranks[i] = D / N + (1 - D) * (sumA + sumB);
+    }
+
+    for (size_t i = 0; i < N; i++) {
+      output_ranks[i] = next_ranks[i];
     }
   }
 }

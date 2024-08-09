@@ -2,16 +2,16 @@
 #include "common.h"
 
 Graph *createGraph(size_t num_vertices) {
-  Graph *graph = (Graph *)malloc(sizeof(Graph));
+  Graph *graph = (Graph *) malloc(sizeof(Graph));
 
-  if (graph == NULL) {
+  if (!graph) {
     PANIC("Could not allocate memory.");
   }
 
   graph->num_vertices = num_vertices;
   graph->neighbors_of = malloc(num_vertices * sizeof(DynamicArray));
 
-  if (graph->neighbors_of == NULL) {
+  if (!graph->neighbors_of) {
     free(graph);
     PANIC("Could not allocate memory.");
   }
@@ -24,7 +24,7 @@ Graph *createGraph(size_t num_vertices) {
 }
 
 void addEdge(Graph *graph, size_t src, size_t dst) {
-  if (graph == NULL) {
+  if (!graph) {
     PANIC("Graph pointer is NULL.");
   }
 
@@ -36,11 +36,11 @@ void addEdge(Graph *graph, size_t src, size_t dst) {
 }
 
 void freeGraph(Graph *graph) {
-  if (graph != NULL) {
-    for (size_t i = 0; i < graph->num_vertices; ++i) {
-      destroyDynamicArray(&graph->neighbors_of[i]);
-    }
-
-    free(graph);
+  if (!graph) return;
+  
+  for (size_t i = 0; i < graph->num_vertices; ++i) {
+    destroyDynamicArray(&graph->neighbors_of[i]);
   }
+
+  free(graph);
 }
